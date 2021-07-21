@@ -8,55 +8,58 @@ Created on Fri Jul  9 09:54:13 2021
 
 import pickle
 import xarray as xr
-import numpy as np
-for i in range(0,4):
-    d=pickle.load(open("precipProfilesDPR_2018%2.2i_SH_v2O.pklz"%(4+i),"rb"))
-    tb=xr.DataArray(d["tb"],dims=["nt","ntb"])
-    stormTop=xr.DataArray(np.array(d["TBBPR"])[:,3],dims=["nt"])
-    pType=xr.DataArray(np.array(d["TBBPR"])[:,0],dims=["nt"])
-    #stop
-    wc=xr.DataArray(d["pWatCont_cmb"],dims=["nt","nwc"])
+
+for i in range(2,10,2):
+    d=pickle.load(open("precipProfilesDPR_2018%2.2i_NH_v2L.pklz"%(i),"rb"))
+    #tb=xr.DataArray(d["tb"],dims=["nt","ntb"])
+    #wc=xr.DataArray(d["pWatCont_cmb"],dims=["nt","nwc"])
     pRate=xr.DataArray(d["pRate_cmb"],dims=["nt","nwc"])
     pRateDPR=xr.DataArray(d["pRate"],dims=["nt","nz"])
     zm=xr.DataArray(d["zm"],dims=["nt","nz","n2"])
     bcL=xr.DataArray(d["bcL"],dims=["nt"])
     bzdL=xr.DataArray(d["bzdL"],dims=["nt"])
-    dSet=xr.Dataset({"tb":tb,"wc":wc,"bcL":bcL,"bzdL":bzdL,"pRate":pRate,"pRateDPR":pRateDPR, \
-                     "zm":zm,"pType":pType,"stormTop":stormTop})
-    dSet.to_netcdf("tb2018%2.2i_SO.nc"%(4+i))
-    print("precipProfilesDPR_2018%2.2i_SH_v2O.pklz"%(4+i))
+    dSet=xr.Dataset({"bcL":bcL,"bzdL":bzdL,"pRate":pRate,"pRateDPR":pRateDPR, "zm":zm})
+    dSet.to_netcdf("tb2018%2.2i_NH_L.nc"%(i))
+    print("precipProfilesDPR_2018%2.2i_NH_v2L.pklz"%(i))
     
+for i in range(8,-13,2):
+    d=pickle.load(open("precipProfilesDPR_2018%2.2i_SH_v2L.pklz"%(i),"rb"))
+    #tb=xr.DataArray(d["tb"],dims=["nt","ntb"])
+    #wc=xr.DataArray(d["pWatCont_cmb"],dims=["nt","nwc"])
+    pRate=xr.DataArray(d["pRate_cmb"],dims=["nt","nwc"])
+    pRateDPR=xr.DataArray(d["pRate"],dims=["nt","nz"])
+    zm=xr.DataArray(d["zm"],dims=["nt","nz","n2"])
+    bcL=xr.DataArray(d["bcL"],dims=["nt"])
+    bzdL=xr.DataArray(d["bzdL"],dims=["nt"])
+    dSet=xr.Dataset({"bcL":bcL,"bzdL":bzdL,"pRate":pRate,"pRateDPR":pRateDPR, "zm":zm})
+    dSet.to_netcdf("tb2018%2.2i_SH_L.nc"%(i))
+    print("precipProfilesDPR_2018%2.2i_SH_v2L.pklz"%(i))
 from netCDF4 import Dataset
 xL=[]
 yL=[]
 import numpy as np
-for i in range(4):
-    fh=Dataset("tb2018%2.2i_SO.nc"%(4+i))
-    tb=fh["tb"][:,:]
+for i in range(1,9,2):
+    fh=Dataset("tb2018%2.2i_NH_L.nc"%(i))
+    #tb=fh["tb"][:,:]
     zm=fh["zm"][:,:,:]
-    pType=fh["pType"][:]
-    stormTop=fh["stormTop"][:]
     zm[zm<0]=0
     bcL=fh["bcL"][:]
     bzdL=fh["bzdL"][:]
     pRateDPR=fh["pRateDPR"][:,:]
     for irec in range(bzdL.shape[0]):
-        if(bzdL[irec]>132 and bcL[irec]>=167 and bzdL[irec]<167 and zm[irec,67,0]>10 and tb[irec,5:9].min()>0):
+        if(bzdL[irec]>132 and bcL[irec]>=167 and bzdL[irec]<167 and zm[irec,67,0]>10):
             x1=[]
             #z1=zm[irec,10:67,0]
             #z1[z1<0]=0
-            x1.extend(tb[irec,5:9])
+            #x1.extend(tb[irec,5:9])
             #x1=
             z1=zm[irec,bzdL[irec]-100-25:bzdL[irec]-100,0]
-            r1=pRateDPR[irec,47:52]
-            r1[r1<0]=0
-            slopeR=np.polyfit(np.arange(5),r1,1)
-            #print(slopeR)
+           
             #print(zm[irec,bzdL[irec]-100-25:bzdL[irec]-100,0])
             #print(iwc)
             #x1.append(iwc)
             #x1[x1<=0]=0
-            ir=152+int(np.random.random()*15)
+            ir=132+int(np.random.random()*35)
             irc=min(ir,bcL[irec])
             dn=irc-bzdL[irec]
             #print(zm[irec,bzdL[irec]-100:bzdL[irec]-100+dn,0],dn)
@@ -73,10 +76,7 @@ for i in range(4):
                     #stop
             #x1=list(x1)
             #x1.extend(x2)
-            x1.append(irc-152)
-            x1.append(slopeR[0])
-            x1.append(stormTop[irec])
-            x1.append(pType[irec])
+            x1.append(irc-132)
             if dn<0:
                 z1[dn:]=-10
             iwc=(10**(0.1*0.8*z1)).sum()
@@ -129,7 +129,7 @@ import xarray as xr
 xLux=xr.DataArray(xLu)
 yLux=xr.DataArray(yLu)
 dset=xr.Dataset({"X":xLux,"y":yLux})
-dset.to_netcdf("trainFeaturesOcean15.nc")
+dset.to_netcdf("trainFeaturesNH_Land.nc")
 stop
 yL[yL<0]=0
 scaler = StandardScaler()
