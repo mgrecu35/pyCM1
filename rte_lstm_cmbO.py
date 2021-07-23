@@ -132,14 +132,27 @@ for i in range(46):
     mProfT[i,:,1]/=mProfT[i,-1,1]
     mProfT[i,:,2]/=mProfT[i,-1,2]
 import matplotlib.pyplot as plt
+st=['stratiform','convective','shallow']
+import matplotlib
+matplotlib.rcParams.update({'font.size': 13})
 
 for i in range(3):
     plt.figure()
     plt.pcolormesh(130+np.arange(46),120+np.arange(47),np.array(mProfT[:,:,i]).T,cmap='gist_earth',vmax=1.1);
     plt.ylim(166,140)   
     plt.xlim(134,175)
+    plt.xlabel('Zero degree bin')
+    plt.ylabel('Range bin')
     plt.colorbar()
+    plt.title("Ocean %s"%st[i])
+    #plt.colorbar()
+    plt.savefig('correctionTableDPR_%s_Ocean.png'%st[i])
 
+import xarray as xr
+
+p1=xr.DataArray(pRatio2D_trainN,dims=['nFL','nbin','nt'])
+d=xr.Dataset({cvstTable":mProfT})
+d.to_netcdf("oceanTablesSH.nc")
 stop   
 import tensorflow as tf     
 #from tf.keras.preprocessing.sequences import pad_sequences       
