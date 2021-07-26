@@ -34,81 +34,89 @@ from numba import jit
 def getAvgProf(bzdL,pTypeL,stormTop,ptype,pRateDPR,pRateCMB,bcL,c1,mProf):
     a=np.nonzero(bcL>167)
     pRateCMB2=pRateDPR.copy()*0
-    pRateCMB[pRateCMB<0]=0
+    pRateCMB[:,0:33][pRateCMB[:,0:33]<0]=0
     for j in a[0]:
-        if pRateCMB[j,32]>=0 and pRateCMB[j,33]<-1:
+        if pRateCMB[j,32]>=0 and pRateCMB[j,33]<0:
             pRateCMB[j,33]=pRateCMB[j,32]
-        if pRateCMB[j,32]>=0 and pRateCMB[j,34]<-1:
+        if pRateCMB[j,32]>=0 and pRateCMB[j,34]<0:
             pRateCMB[j,34]=pRateCMB[j,32]
-        pRateCMB2[j,0:68]=np.interp(np.arange(68),2*np.arange(35),pRateCMB[j,0:35])
-    pRateDPR=pRateCMB2
+       
+        pRateCMB2[j,0:69]=np.interp(np.arange(69),2*np.arange(35),pRateCMB[j,0:35])
+        if stormTop[j]>100:
+            pRateCMB2[j,0:stormTop[j]-100:]=0
+    pRateDPR_1=pRateCMB2
     for ibzd in range(130,176):
         b=np.nonzero(bzdL[a]==ibzd)
         c=np.nonzero(pTypeL[a][b]==1)
         #print(len(c[0]))
         c1[ibzd-130]=len(c[0])     
         if len(c[0])>0:
-            mProf[ibzd-130,:,0]=pRateDPR[a[0][b][c],20:67].sum(axis=0)
+            mProf[ibzd-130,:,0]=pRateDPR_1[a[0][b][c],20:68].sum(axis=0)
         c=np.nonzero(pTypeL[a][b]==2)
         d=np.nonzero(stormTop[a][b][c]<ibzd+8)
         if len(d[0])>0:
-            mProf[ibzd-130,:,1]=pRateDPR[a[0][b][c][d],20:67].sum(axis=0)
+            mProf[ibzd-130,:,1]=pRateDPR_1[a[0][b][c][d],20:68].sum(axis=0)
         d=np.nonzero(stormTop[a][b][c]>=ibzd+8)
         if len(d[0])>0:
-            mProf[ibzd-130,:,2]=pRateDPR[a[0][b][c][d],20:67].sum(axis=0)
+            mProf[ibzd-130,:,2]=pRateDPR_1[a[0][b][c][d],20:68].sum(axis=0)
             
 @jit(nopython=False)
 def get2dhist(bzdL,pTypeL,stormTop,ptype,pRateDPR,pRateCMB,bcL,cHist,cHist2,sumS,sumS2,mProfT,\
               c1,mProf,systDiff):
-    a=np.nonzero(bcL>167)
-    #pRateCMB2=pRateDPR.copy()*0
-    #pRateCMB[pRateCMB<0]=0
-    #for j in a[0]:
-    #    if pRateCMB[j,32]>=0 and pRateCMB[j,33]<-1:
-    #        pRateCMB[j,33]=pRateCMB[j,32]
-    #    if pRateCMB[j,32]>=0 and pRateCMB[j,34]<-1:
-    #        pRateCMB[j,34]=pRateCMB[j,32]
-    #    pRateCMB2[j,0:68]=np.interp(np.arange(68),2*np.arange(35),pRateCMB[j,0:35])
-    #pRateDPR=pRateCMB2
+    a=np.nonzero(bcL>166)
+    pRateCMB2=pRateDPR.copy()*0
+    pRateCMB[:,0:33][pRateCMB[:,0:33]<0]=0
+    for j in a[0]:
+        if pRateCMB[j,32]>=0 and pRateCMB[j,33]<0:
+            pRateCMB[j,33]=pRateCMB[j,32]
+        if pRateCMB[j,32]>=0 and pRateCMB[j,34]<0:
+            pRateCMB[j,34]=pRateCMB[j,32]
+        #pRateCMB[j,pRateCMB[j,:]<0]=0
+        pRateCMB2[j,0:69]=np.interp(np.arange(69),2*np.arange(35),pRateCMB[j,0:35])
+        if stormTop[j]>100:
+            pRateCMB2[j,0:stormTop[j]-100:]=0
+    pRateDPR_1=pRateCMB2.copy()
     for i in a[0]:
         if bzdL[i]<134:
             continue
-        if pRateDPR[i,67]>0:
-            irng=int(np.random.random()*15)+152            
-            i1=int(np.log(pRateDPR[i,67]+1e-9)/0.25)+2
-            i2=int(np.log(pRateDPR[i,irng-100]+1e-9)/0.25)+2
+        if bcL[i]<=167:
+            continue
+        if pRateDPR_1[i,66]>=0:
+            irng=int(np.random.random()*18)+150        
+            i1=int(np.log(pRateDPR_1[i,66]+1e-9)/0.25)+2
+            i2=int(np.log(pRateDPR_1[i,irng-100]+1e-9)/0.25)+2
             ibzd=bzdL[i]
             if ibzd>=176:
                 continue
             #print(ibzd,irng-120)
-            while(pRateDPR[i,irng-100]<=0) and irng>140:
-                irng-=1
-            if pRateDPR[i,irng-100]<0.:
+            #while(pRateDPR_1_1[i,irng-100]<=0) and irng>140:
+            #    irng-=1
+            if pRateDPR_1[i,irng-100]<0.:
                 continue
             if pTypeL[i]==1:
                 correctRatio=mProfT[ibzd-130,irng-120,0]
-                mProf[ibzd-130,irng-120,0]+=pRateDPR[i,irng-100]
+                mProf[ibzd-130,irng-120,0]+=pRateDPR_1[i,irng-100]
                 c1[ibzd-130,irng-120,0]+=1
-                systDiff[0,0]+=pRateDPR[i,67]
-                systDiff[0,1]+=pRateDPR[i,irng-100]
+                systDiff[0,0]+=pRateDPR_1[i,67]
+                systDiff[0,1]+=pRateDPR_1[i,irng-100]
             else:
                 #continue
                 if stormTop[i]>=ibzd+8:
                     correctRatio=mProfT[ibzd-130,irng-120,2]
-                    mProf[ibzd-130,irng-120,2]+=pRateDPR[i,irng-100]
+                    mProf[ibzd-130,irng-120,2]+=pRateDPR_1[i,irng-100]
                     c1[ibzd-130,irng-120,2]+=1
-                    systDiff[2,0]+=pRateDPR[i,67]
-                    systDiff[2,1]+=pRateDPR[i,irng-100]
+                    systDiff[2,0]+=pRateDPR_1[i,67]
+                    systDiff[2,1]+=pRateDPR_1[i,irng-100]
                 else:
                     correctRatio=mProfT[ibzd-130,irng-120,1]
-                    mProf[ibzd-130,irng-120,1]+=pRateDPR[i,irng-100]
+                    mProf[ibzd-130,irng-120,1]+=pRateDPR_1[i,irng-100]
                     c1[ibzd-130,irng-120,1]+=1
-                    systDiff[1,0]+=pRateDPR[i,67]
-                    systDiff[1,1]+=pRateDPR[i,irng-100]
+                    systDiff[1,0]+=pRateDPR_1[i,67]
+                    systDiff[1,1]+=pRateDPR_1[i,irng-100]
            
             if correctRatio!=correctRatio:
                 correctRatio=1
-            corrPRate=pRateDPR[i,irng-100]/(correctRatio+1e-4)
+            corrPRate=pRateDPR_1[i,irng-100]/(correctRatio+1e-4)
             if pTypeL[i]==1:
                 systDiff[0,2]+=corrPRate
             else:
@@ -117,11 +125,11 @@ def get2dhist(bzdL,pTypeL,stormTop,ptype,pRateDPR,pRateCMB,bcL,cHist,cHist2,sumS
                 else:
                     systDiff[1,2]+=corrPRate
             #print(corrPRate)
-            sumS[0]+=(pRateDPR[i,67])
-            sumS[1]+=(pRateDPR[i,irng-100])
-            sumS[2]+=(pRateDPR[i,67])**2
-            sumS[3]+=(pRateDPR[i,irng-100])**2
-            sumS[4]+=(pRateDPR[i,irng-100])*pRateDPR[i,67]
+            sumS[0]+=(pRateDPR_1[i,67])
+            sumS[1]+=(pRateDPR_1[i,irng-100])
+            sumS[2]+=(pRateDPR_1[i,67])**2
+            sumS[3]+=(pRateDPR_1[i,irng-100])**2
+            sumS[4]+=(pRateDPR_1[i,irng-100])*pRateDPR_1[i,67]
             sumS[5]+=1
             i2=min(29,i2)
             i2=max(0,i2)
@@ -132,27 +140,30 @@ def get2dhist(bzdL,pTypeL,stormTop,ptype,pRateDPR,pRateCMB,bcL,cHist,cHist2,sumS
             i3=max(0,i3)
             cHist[i1,i2]+=1
             cHist2[i1,i3]+=1
-            sumS2[0]+=(pRateDPR[i,67])
+            sumS2[0]+=(pRateDPR_1[i,67])
             sumS2[1]+=(corrPRate)
-            sumS2[2]+=(pRateDPR[i,67])**2
+            sumS2[2]+=(pRateDPR_1[i,67])**2
             sumS2[3]+=(corrPRate)**2
-            sumS2[4]+=(corrPRate)*pRateDPR[i,67]
+            sumS2[4]+=(corrPRate)*pRateDPR_1[i,67]
             sumS2[5]+=1
     #return mProf
 import numpy as np
 c1T=np.zeros((46),int)
-mProfT=np.zeros((46,47,3),float)
-mProfS=np.zeros((46,47,3),float)
-cS=np.zeros((46,47,3),float)
-sumS=np.zeros((8),float)
+mProfT=np.zeros((46,48,3),float)
+mProfS=np.zeros((46,48,3),float)
+cS=np.zeros((46,48,3),float)
+
 cHist=np.zeros((30,30),float)
-sumS2=np.zeros((8),float)
+
 cHist2=np.zeros((30,30),float)
 systDiff=np.zeros((3,3),float)
+
+for i in range(1,-9):
+    print(i)
+    fh=Dataset("Data/tb2018%2.2i_NH_L.nc"%(i))
 for i in range(4,12):
     print(i)
-    fh=Dataset("Data/tb2018%2.2i_SO.nc"%(i))
-    #tb=fh["tb"][:,:]
+    fh=Dataset("Data/tb2018%2.2i_SO.nc"%(i))    #tb=fh["tb"][:,:]
     zm=fh["zm"][:,:,:]
     pType=fh["pType"][:]
     stormTop=fh["stormTop"][:]
@@ -166,7 +177,7 @@ for i in range(4,12):
     b=np.nonzero(bcL[a]>167)
     ptype=2
     c1=np.zeros((46),int)
-    mProf=np.zeros((46,47,3),float)
+    mProf=np.zeros((46,48,3),float)
     pRateDPR[pRateDPR<0]=0
     getAvgProf(bzdL,pType,stormTop,ptype,pRateDPR,pRateCMB,bcL,c1,mProf)
     c1T+=c1
@@ -183,7 +194,11 @@ for i in range(46):
 from scipy.ndimage import gaussian_filter
 for i in range(3): 
     mProfT[i,:,i]=gaussian_filter(mProfT[i,:,i], sigma=0.5)
-
+sumS=np.zeros((8),float)
+sumS2=np.zeros((8),float)
+for i in range(1,-9):
+    print(i)
+    fh=Dataset("Data/tb2018%2.2i_NH_L.nc"%(i))
 for i in range(4,12):
     print(i)
     fh=Dataset("Data/tb2018%2.2i_SO.nc"%(i))
@@ -204,8 +219,8 @@ for i in range(4,12):
     mProf=np.zeros((46,47,3),float)
     pRateDPR[pRateDPR<0]=0
     #getAvgProf(bzdL,pType,stormTop,ptype,pRateDPR,pRateCMB,bcL,c1,mProf)
-    for k in range(5):
-        get2dhist(bzdL,pType,stormTop,ptype,pRateDPR,pRateCMB,bcL,cHist,cHist2,sumS,sumS2,mProfT,\
+    #for k in range(15):
+    get2dhist(bzdL,pType,stormTop,ptype,pRateDPR,pRateCMB,bcL,cHist,cHist2,sumS,sumS2,mProfT,\
               cS,mProfS,systDiff)
     #c1T+=c1
     #mProfT+=mProf
@@ -218,7 +233,7 @@ matplotlib.rcParams.update({'font.size': 13})
 
 for i in range(3):
     plt.figure()
-    plt.pcolormesh(130+np.arange(46),120+np.arange(47),np.array(mProfT[:,:,i]).T,cmap='gist_earth',vmax=1.1);
+    plt.pcolormesh(130+np.arange(46),120+np.arange(48),np.array(mProfT[:,:,i]).T,cmap='gist_earth',vmax=1.1);
     plt.ylim(166,120)   
     plt.xlim(134,175)
     if i==2:
@@ -228,6 +243,7 @@ for i in range(3):
     plt.colorbar()
     plt.title("Ocean %s"%st[i])
     #plt.colorbar()
+    plt.tight_layout()
     plt.savefig('correctionTableDPR_Ocean_%s.png'%st[i])
 mProfS/=(cS+1e-9)
 for i in range(46):
@@ -235,9 +251,9 @@ for i in range(46):
     mProfS[i,:,1]/=mProfS[i,-1,1]
     mProfS[i,:,2]/=mProfS[i,-1,2]
         
-for i in range(3):
+for i in range(-3):
     plt.figure()
-    plt.pcolormesh(130+np.arange(46),120+np.arange(47),np.array(mProfS[:,:,i]).T,cmap='gist_earth',vmax=1.1);
+    plt.pcolormesh(130+np.arange(46),120+np.arange(48),np.array(mProfS[:,:,i]).T,cmap='gist_earth',vmax=1.1);
     plt.ylim(166,120)   
     plt.xlim(134,175)
     plt.xlabel('Zero degree bin')
@@ -260,12 +276,13 @@ ax.set_xticklabels(['','St','','Cv','','Sh',''])
 plt.xlim(-0.25,2.25)
 ax.legend()
 plt.title('Ocean')
+plt.tight_layout()
 plt.savefig('biasesOcean.png')
 import xarray as xr
 
 p1=xr.DataArray(mProfT,dims=['nFL','nbin','nt'])
 d=xr.Dataset({"cvstTable":p1})
-d.to_netcdf("oceanTablesNH.nc")
+d.to_netcdf("OceanTablesNH.nc")
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
@@ -279,8 +296,10 @@ ax.set_aspect('equal')
 plt.xlabel('True precipitation rate (mm/h)')
 plt.ylabel('Persistence-based prediction (mm/h)')
 plt.title('Ocean')
-plt.savefig('oceanPersistenceHist2d.png')
 plt.colorbar()
+plt.tight_layout()
+plt.savefig('OceanPersistenceHist2d.png')
+
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
@@ -294,8 +313,10 @@ ax.set_aspect('equal')
 plt.xlabel('True precipitation rate (mm/h)')
 plt.title('Ocean')
 plt.ylabel('VPP prediction (mm/h)')
-plt.savefig('oceanVPP_Hist2d.png')
 plt.colorbar()
+plt.tight_layout()
+plt.savefig('OceanVPP_Hist2d.png')
+
 
 def corrCoef(sumS):
     x1=sumS[0]/sumS[5]
@@ -344,7 +365,7 @@ import xarray as xr
 xLux=xr.DataArray(xLu)
 yLux=xr.DataArray(yLu)
 dset=xr.Dataset({"X":xLux,"y":yLux})
-dset.to_netcdf("trainFeaturesLandComb.nc")
+dset.to_netcdf("trainFeaturesOceanComb.nc")
 stop
 yL[yL<0]=0
 scaler = StandardScaler()
