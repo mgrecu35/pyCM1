@@ -71,16 +71,32 @@ def estSnowBB(f,zm,mu,Deq,ext,bscat,scat,g,vfall,\
                   DeqKa,extKa,bscatKa,scatKa,gKa,vfallKa,\
                       DeqKa_r,extKa_r,bscatKa_r,scatKa_r,gKa_r,vfallKa_r,wlKa,rt):
     pwc=1.0
-    gwc=np.array([f*pwc])
-    gwc1=1.1*gwc
-    ncg=7500/2-0.50*(gwc-1)
-    print(gwc,ncg)
-    z_g,att_g,dm_g,prate_g=calcZG(gwc,ncg,mu,Deq,ext,bscat,scat,g,vfall,\
+    for it in range(3):
+        gwc=np.array([f*pwc])
+        gwc1=1.1*gwc
+        ncg=7500/2-0.50*(gwc-1) 
+        #print(gwc,ncg)
+        z_g,att_g,dm_g,prate_g=calcZG(gwc,ncg,mu,Deq,ext,bscat,scat,g,vfall,\
                                   Deq_r,ext_r,bscat_r,scat_r,g_r,vfall_r,wl)
-    z_g1,att_g1,dm_g1,prate_g1=calcZG(gwc1,ncg,mu,Deq,ext,bscat,scat,g,vfall,\
+        z_g1,att_g1,dm_g1,prate_g1=calcZG(gwc1,ncg,mu,Deq,ext,bscat,scat,g,vfall,\
                                   Deq_r,ext_r,bscat_r,scat_r,g_r,vfall_r,wl)
-    pwcBB=np.log10((1-f)*pwc)
-    pwcBB1=np.log10(1.1*(1-f)*pwc)
-    ifind=rt.bisection2(rt.tablep2.pwcbb, pwcBB)
-    ifind1=rt.bisection2(rt.tablep2.pwcbb, pwcBB1)
-    print(ifind,ifind1)
+        pwcBB=np.log10((1-f)*pwc)
+        pwcBB1=np.log10(1.1*(1-f)*pwc)
+        ifind=rt.bisection2(rt.tablep2.pwcbb, pwcBB, 286)-1
+        ifind1=rt.bisection2(rt.tablep2.pwcbb, pwcBB1, 286)-1
+        x=(pwcBB-rt.tablep2.pwcbb[ifind])/(rt.tablep2.pwcbb[ifind+1]-rt.tablep2.pwcbb[ifind])
+        x1=(pwcBB1-rt.tablep2.pwcbb[ifind1])/(rt.tablep2.pwcbb[ifind1+1]-rt.tablep2.pwcbb[ifind1])
+        #print(ifind,pwcBB,x,rt.tablep2.pwcbb[ifind],rt.tablep2.pwcbb[ifind+1],x1,ifind1)
+        print()
+        zBB=rt.tablep2.zkubb[ifind]+x*0.25
+        zBB1=rt.tablep2.zkubb[ifind1]+x1*0.25
+        zmixed=10*np.log10(10.**(0*1*z_g[0])+10**(0.1*zBB))
+        zmixed1=10*np.log10(10.**(0*1*z_g1[0])+10**(0.1*zBB1))
+        dzdw=(zmixed1-zmixed)/(0.1*pwc)
+        dwg=(zm-zmixed)*dzdw/(dzdw**2+0.1)
+        
+        pwc+=0.95*dwg
+        pwc=max(pwc,0.0011*4)
+        print(pwc)
+    print(zmixed,zmixed1,zm,pwc)
+    return pwc

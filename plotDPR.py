@@ -85,9 +85,9 @@ for i in range(40,71):
             Deq_r,ext_r,bscat_r,scat_r,g_r,vfall_r,wl,\
             DeqKa,extKa,bscatKa,scatKa,gKa,vfallKa,\
             DeqKa_r,extKa_r,bscatKa_r,scatKa_r,gKa_r,vfallKa_r,wlKa)
-    f=0.5
+    f=0.25
     
-    estSnowBB(f,zm[i,nj,bbpeak[i,nj]-1],mu,Deq,ext,bscat,scat,g,vfall,\
+    pwc_mixed=estSnowBB(f,zm[i,nj,bbpeak[i,nj]-1],mu,Deq,ext,bscat,scat,g,vfall,\
             Deq_r,ext_r,bscat_r,scat_r,g_r,vfall_r,wl,\
             DeqKa,extKa,bscatKa,scatKa,gKa,vfallKa,\
             DeqKa_r,extKa_r,bscatKa_r,scatKa_r,gKa_r,vfallKa_r,wlKa,rt)   
@@ -99,7 +99,7 @@ for i in range(40,71):
         pwcBB=10**(rt.tablep2.pwcbb[ind])
         swc=10**dn*10**(rt.tablep2.swc[indS])
         rwc=10**dn*10**(rt.tablep2.rwc[indR])
-        retL.append([gwc[a][-1],pwcBB,swc,rwc,wc[i,nj,bbpeak[i,nj]+4]])
+        retL.append([gwc[a][-1],pwcBB,swc,rwc,wc[i,nj,bbpeak[i,nj]+4],pwc_mixed])
     #@stop
     #print(np.corrcoef(zm[i,nj,80:][a],z_g)[0,1], (zm[i,nj,80:][a]-z_g).mean())
     #print('ka',np.corrcoef(zmka[i,nj,80:][a],zka_g)[0,1], (zmka[i,nj,80:][a]-zka_g).mean())
@@ -112,7 +112,8 @@ plt.plot(retL[:,1])
 #plt.plot(retL[:,2])
 plt.plot(retL[:,3])
 plt.plot(retL[:,4])
-plt.legend(['ssrg','bb','rTbl','rDPRr'])
+plt.plot(retL[:,5])
+plt.legend(['ssrg','bb','rTbl','rDPRr','mixed'])
 stop   
 plt.figure()
 bzd=fh['FS/VER/binZeroDeg'][1200:1400,:]
